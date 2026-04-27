@@ -11,7 +11,7 @@ from neuronx_distributed.utils.utils import hardware
 from nkilib.core.topk import topk as nki_topk
 from custom_nki_kernels import custom_nki_topk
 
-def get_topk_implementation(use_topk_rotated_kernel=False, use_custom_topk_kernel=False, lnc=2, stages=1):
+def get_topk_implementation(use_topk_rotated_kernel=False, use_custom_topk_kernel=True, lnc=2, stages=1):
     assert not (use_topk_rotated_kernel and use_custom_topk_kernel), \
         "Cannot use both topk_rotated and custom_topk kernels simultaneously"
     
@@ -27,7 +27,7 @@ def get_topk_implementation(use_topk_rotated_kernel=False, use_custom_topk_kerne
     elif use_custom_topk_kernel:
         assert stages == 1, "stages other than 1 is not supported when using custom_topk kernel"
         def topk_custom(t, k, dim=None):
-            return custom_nki_topk(t, k)``
+            return custom_nki_topk(t, k)
 
         return topk_custom, topk_custom, stages
     else:
