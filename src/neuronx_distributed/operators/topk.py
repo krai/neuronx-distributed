@@ -9,10 +9,10 @@ from neuronx_distributed.parallel_layers.parallel_state import get_tensor_model_
 from neuronx_distributed.parallel_layers.mappings import _gather_along_dim
 from neuronx_distributed.utils.utils import hardware
 from nkilib.core.topk import topk as nki_topk
-from custom_nki_kernels import custom_nki_topk
+from bitonic_nki_kernels import bitonic_nki_topk
 
-def get_topk_implementation(use_topk_rotated_kernel=False, use_custom_topk_kernel=True, lnc=2, stages=1):
-    assert not (use_topk_rotated_kernel and use_custom_topk_kernel), \
+def get_topk_implementation(use_topk_rotated_kernel=False, use_topk_bitonic_kernel=True, lnc=2, stages=1):
+    assert not (use_topk_rotated_kernel and use_topk_bitonic_kernel), \
         "Cannot use both topk_rotated and custom_topk kernels simultaneously"
     
     if use_topk_rotated_kernel:
@@ -24,12 +24,12 @@ def get_topk_implementation(use_topk_rotated_kernel=False, use_custom_topk_kerne
             return nki_topk[lnc](t, k, sorted_flag=True)
 
         return topk_impl, topk_impl_sorted, stages
-    elif use_custom_topk_kernel:
-        assert stages == 1, "stages other than 1 is not supported when using custom_topk kernel"
-        def topk_custom(t, k, dim=None):
-            return custom_nki_topk(t, k)
+    elif use_topk_bitonic_kernel:
+        assert stages == 1, "stages other than 1 is not supported when using topk_bitonic kernel"
+        def topk_bitonic(t, k, dim=None):
+            return bitonic_nki_topk(t, k)
 
-        return topk_custom, topk_custom, stages
+        return topk_bitonic, topk_bitonic, stages
     else:
         def topk_impl(t, k, dim=None):
             return TopK.apply(t, k, dim=dim)
