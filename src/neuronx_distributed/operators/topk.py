@@ -11,8 +11,8 @@ from neuronx_distributed.utils.utils import hardware
 from nkilib.core.topk import topk as nki_topk
 from bitonic_nki_kernels import bitonic_nki_topk
 
-def get_topk_implementation(top_k_kernel_enabled=False, kernel_implementation='', lnc=2, stages=1):
-    if top_k_kernel_enabled and kernel_implementation == 'rotated':
+def get_topk_implementation(top_k_kernel_enabled=False, top_k_kernel_implementation='', lnc=2, stages=1):
+    if top_k_kernel_enabled and top_k_kernel_implementation == 'rotated':
         assert stages == 1, "stages other than 1 is not supported when using topk_rotated kernel"
         def topk_impl(t, k, dim=None):
             return nki_topk[lnc](t, k, sorted_flag=False)
@@ -21,7 +21,7 @@ def get_topk_implementation(top_k_kernel_enabled=False, kernel_implementation=''
             return nki_topk[lnc](t, k, sorted_flag=True)
 
         return topk_impl, topk_impl_sorted, stages
-    elif top_k_kernel_enabled and kernel_implementation == 'bitonic':
+    elif top_k_kernel_enabled and top_k_kernel_implementation == 'bitonic':
         assert stages == 1, "stages other than 1 is not supported when using topk_bitonic kernel"
         def topk_bitonic(t, k, dim=None):
             return bitonic_nki_topk(t, k)
@@ -36,7 +36,7 @@ def get_topk_implementation(top_k_kernel_enabled=False, kernel_implementation=''
         raise ValueError(f"Unsupported topk kernel implementation, check the on_device_sampling_config.")
 
 
-def topk(tensor, k, dim, gather_dim, process_group=None, stages=1, rank_id=None, top_k_kernel_enabled=False, kernel_implementation='', lnc=2):
+def topk(tensor, k, dim, gather_dim, process_group=None, stages=1, rank_id=None, top_k_kernel_enabled=False, top_k_kernel_implementation='', lnc=2):
     """
     This function performs a distributed topk.
     This function will take in a sharded tensor,
@@ -72,7 +72,7 @@ def topk(tensor, k, dim, gather_dim, process_group=None, stages=1, rank_id=None,
     is_trn1 = hardware_type == hardware.TRN1
     is_trn2_or_trn3 = (hardware_type == hardware.TRN2 or hardware_type == hardware.TRN3)
 
-    topk_implementation, call_topk_kernel_with_sorted_parameter, stages = get_topk_implementation(top_k_kernel_enabled, kernel_implementation, lnc, stages)
+    topk_implementation, call_topk_kernel_with_sorted_parameter, stages = get_topk_implementation(top_k_kernel_enabled, top_k_kernel_implementation, lnc, stages)
 
     if stages > 1:
         if is_trn2_or_trn3:
