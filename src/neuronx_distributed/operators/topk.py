@@ -23,7 +23,7 @@ def get_topk_implementation(top_k_kernel_enabled=False, top_k_kernel_implementat
         return topk_impl, topk_impl_sorted, stages
     elif top_k_kernel_enabled and top_k_kernel_implementation == 'bitonic':
         assert stages == 1, "stages other than 1 is not supported when using topk_bitonic kernel"
-        def topk_bitonic(t, k):
+        def topk_bitonic(t, k, dim=None):
             return bitonic_nki_topk(t, k, lnc=lnc)
 
         return topk_bitonic, topk_bitonic, stages
